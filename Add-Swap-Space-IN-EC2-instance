@@ -1,0 +1,58 @@
+How to Add Swap on AWS EC2 Instance?
+First, check if the server has any swap configured on it by using the swapon utility. You can use the -s flag to display a summary of swap usage and availability on your server.
+#swapon -s
+If nothing is returned, then we can ensure that no swap file exists on the server.
+
+You can also check the swap with the free utility. It shows the overall memory usage of the server.
+#free -m
+The typical way of allocating space for swap is to use a dedicated partition. However, altering the partition scheme is not always possible due to hardware or software constraints. In this scenario, we can easily create a swap file that resides on the existing partition with the help of dd or fallocate utilities.
+Calculate Swap Space Size
+The general rule is that the swap space should be equal to 2X the physical RAM, for up to 2 GB of physical RAM, and then an additional 1x physical RAM for any amount above 2 GB. Also, Swap space should never be less than 32 MB.
+
+Amount of system RAM	Recommended swap space
+<= 2GB	2x the amount of RAM but never less than 32 MB
+> 2GB and < 32GB	4 GB + (RAM – 2 GB)
+32 GB of RAM or more	1x the amount of RAM
+Check the available storage space of the server:
+Use the command df to check the available disk space of the server.
+
+df -h
+If the server has enough free disk space, please proceed further.
+
+Create a Swap File
+As mentioned earlier, you can use either dd utility or fallocate utility to create the swap file for your server.
+
+Here, I am creating a 2GB Swapfile on the root file system.
+
+Creating swapfile using dd utility:
+
+#dd if=/dev/zero of=/swapfile bs=1M count=2048
+Where, bs = block size and count = Number of blocks
+
+Creating swapfile using fallocate utility:
+
+#fallocate --length 2G /swapfile
+Next, update the permissions of the created swapfile using chmod command:
+
+#chmod 600 /swapfile
+Now, convert that file in to a swap area using mkswap command:
+
+#mkswap /swapfile
+Finally enable swap using swapon utility:
+
+#swapon /swapfile
+Verify that the procedure was successful:
+
+#swapon -s
+Make this swap setting persist by adding following line in /etc/fstab file:
+
+/swapfile swap swap defaults 0 0
+
+====================================================================
+Some useful links
+
+https://aws.amazon.com/premiumsupport/knowledge-center/ec2-memory-swap-file/
+
+https://dev.to/hardiksondagar/how-to-use-aws-ebs-volume-as-a-swap-memory-5d15
+
+https://thegeeksalive.com/how-to-add-swap-on-aws-ec2-instance/
